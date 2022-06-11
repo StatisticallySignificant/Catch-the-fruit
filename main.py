@@ -1,95 +1,75 @@
-# But : touche enfoncée -> le panier se déplace
-# Jeu se lance
-# Avoir un panier et des fruits 
-import pygame, random, Panier, Fruits
+# The game is on
+# Goal of this file : handle moves and events
+import pygame, Panier, Fruits
 from pygame.locals import *
 from Panier import Panier
 from Fruits import Fruit, create_fruit
 
 pygame.init()
 
-# le jeu tourne
+# Game is running
 running = True
-# pas encore perdu
+# Player has not lost
 lost = False
 
-# Gérer affichage
+# Handle screen and display
 screen_size = [900,600]
 screen = pygame.display.set_mode(screen_size)
 pygame.display.set_caption("Collect the fruits")
 
-# Gérer un temps
+# Handle time
 clock = pygame.time.Clock()
 second_clock = pygame.time.Clock()
 
 score = 0
-# On définit le nombre max de sprites en même temps
-fruits_maximum_count = 10 # Renamed vars
 fruits = []
-# Your usage of a sprite Group + a list to have all 
-# the fruits is a bit wanky but ok
+# Usage of a sprite Group + a list to have all 
+# the fruits is probably unefficient
 
-# On gère les coordonnées du Panier
-player_dimensions = (100,100)
-# Renamed misleading vars, I thought it was going to be the current position
-# of the player but you only use it for its spawn 
+# Handling basket dimensions and initial coordinates
+player_dimensions = (100,100) 
 spawn_player_x = screen_size[0]*0.5
 spawn_player_y = screen_size[1] - player_dimensions[1]*1.5
 # spawn_coords = (screen_size[0]*0.5, screen_size[1] - dimensions[1]*1.5) -> Could have been even better 
 
-# Créer Group de fruits (sprites)
+# Create Group of fruits (sprites)
 fruits_group = pygame.sprite.Group()
 
-
-# Gère affichage du score en permanence
+# Handling score display
 def collected_fruits(screen,score) :
 	font = pygame.font.SysFont(None, 35) 
 	text = font.render("Score "+str(score), True, (255,255,255))
 	screen.blit(text,(0,0))
 
-# Affichage écran de fin 
+# Handling last screen display 
 def end_screen(screen,score):
 	font = pygame.font.SysFont(None, 50) 
 	text = font.render("GameOver, your score: "+str(score), True, (255,255,255),(0,0,0))
 	screen.blit(text,(200,300))
 
-# There was here a lot of functions designed to 
-# instantiate a fruit and add it to a Group of sprites
-# I moved the whole into Fruits.py and deleted the 
-# little ones
-
-# Teste si possible de créer un nv fruit
-def enough_time(passed_time) :
-	if passed_time > 1500 :
-		print("enough", passed_time)
-		return(True)
-	else :
-		return(False)
-
-
-
-# Créer un panier
+# Create the basket
 panier = Panier(spawn_player_x, spawn_player_y, 500, player_dimensions)
-# On créé notre premier fruit
+# Create the first fruit and initialising time between each fruit
 create_fruit(fruits_group, screen_size[0])
 last_created = 0
 
 while running :
-	# Le temps entre chaque frame en secondes
+	# time bewteen two frames
 	delta_time = clock.tick(30)* 10**-3
 	delta_time2 = second_clock.tick()
 	last_created += delta_time2
 
-	# Chercher les évènements 
+	# Handle events 
 	for event in pygame.event.get():
-		# Gérer la fermeture du jeu
+		# quit events
 		if event.type == pygame.QUIT or (event.type == KEYDOWN and event.key == K_BACKSPACE) :
 			running = False
 			break
 		
 		pressed = pygame.key.get_pressed()
-		# Panier déplaçable que si pas perdu 
-		if lost == False :
+		# The player can move only if he has not lost 
+		if not lost :
+			# Handle horizontals move of the basket
 			if pressed[pygame.K_LEFT]:
 				panier.direction[0] = -1
 			elif pressed[pygame.K_RIGHT]:
@@ -104,41 +84,40 @@ while running :
 	#		else:
 	#			panier.direction[1] = 0
 
-	# On vide l'écran
+	# Clear screen
 	screen.fill((0,0,0))
 
 	panier.move(delta_time)
 
 	fruits = pygame.sprite.Group.sprites(fruits_group)
 
-	# On crée le max de sprites autorisé
-	if len(fruits) < fruits_maximum_count and lost == False and enough_time(last_created) :
+	# Create fruit if necessary
+	if not lost and last_created>1500 :
 		create_fruit(fruits_group, screen_size[0])
 		last_created = 0
 		fruits = pygame.sprite.Group.sprites(fruits_group)
 		
-
+	# Handle fruit move and event
 	for i in range (len(fruits)):
 		spritei = fruits[i]
 		move_tom_x, move_tom_y = spritei.rect[0], spritei.rect[1]
 	
-		# On va détecter la collision : si le panier se fait toucher par la tomate
-		# alors on arrête de faire bouger la tomate et on arrête de la dessiner
-
+		# If it is still falling, it keeps falling and is on screen
 		if (not panier.rect.colliderect(spritei.rect)) and (move_tom_y < screen_size[1] - 51) and fruits_group.has(spritei):
 			spritei.move(delta_time)
 			spritei.draw(screen)
+		# If the basket touchs the fruit, the score rise 
+		# and the fruit disapear
 		elif panier.rect.colliderect(spritei.rect) and fruits_group.has(spritei) :
 			score+=1
 			spritei.remove(fruits_group)
 
+		# If the fruit touchs the ground, the player loose
 		elif move_tom_y >= screen_size[1] - 51  and fruits_group.has(spritei) :
-			print ("raté")
 			lost = True
 			break
 
-
-	if not lost: # (better readability) 
+	if not lost: 
 		panier.draw(screen)
 		collected_fruits(screen,score)
 		pygame.display.flip()
