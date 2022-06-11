@@ -3,9 +3,14 @@
  # Le fruit et le panier doivent avoir un collider
 import pygame
 
+# Panier and Fruit classes both has:
+# a rect, an image, a position, a direction, a speed, a draw function and a move function
+# Maybe they could have been the same class or they could have inherited from the same class
+# so we don't write two times the same code
+
 class Panier:
 	def __init__(self, x, y, speed, dimensions, direction=[0,0]):
-		self.image = pygame.image.load("Catch_Fruits\panier_fondnoir_rogne.png")
+		self.image = pygame.image.load("panier_fondnoir_rogne.png") # It was working for you ? It couldn't find the png file for me
 		self.image = pygame.transform.scale(self.image, dimensions)
 		# la direction dépend de la touche appuyée par le joueur
 		self.direction = direction

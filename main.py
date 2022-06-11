@@ -4,7 +4,7 @@
 import pygame, random, Panier, Fruits
 from pygame.locals import *
 from Panier import Panier
-from Fruits import Fruits
+from Fruits import Fruit, create_fruit
 
 pygame.init()
 
@@ -24,14 +24,18 @@ second_clock = pygame.time.Clock()
 
 score = 0
 # On définit le nombre max de sprites en même temps
-maximum = 10 
-mysprites = []
-
+fruits_maximum_count = 10 # Renamed vars
+fruits = []
+# Your usage of a sprite Group + a list to have all 
+# the fruits is a bit wanky but ok
 
 # On gère les coordonnées du Panier
-dimensions = (100,100)
-panier_x = screen_size[0]*0.5
-panier_y = screen_size[1] - dimensions[1]*1.5
+player_dimensions = (100,100)
+# Renamed misleading vars, I thought it was going to be the current position
+# of the player but you only use it for its spawn 
+spawn_player_x = screen_size[0]*0.5
+spawn_player_y = screen_size[1] - player_dimensions[1]*1.5
+# spawn_coords = (screen_size[0]*0.5, screen_size[1] - dimensions[1]*1.5) -> Could have been even better 
 
 # Créer Group de fruits (sprites)
 fruits_group = pygame.sprite.Group()
@@ -49,35 +53,15 @@ def end_screen(screen,score):
 	text = font.render("GameOver, your score: "+str(score), True, (255,255,255),(0,0,0))
 	screen.blit(text,(200,300))
 
-# Choix couleur ou image des fruits
-def fruit_color():
-	list_color = [1,(255,0,0),(0,255,0), (0,0,255), (255,255,0), (0,255,255), (255,0,255), (70,70,70), (255,255,255)]
-	color_number = (random.randint(0,8))
-	color = list_color[color_number]
-	return (color)
-
-# Choisir vitesse initiale aléatoirement
-def fruit_speed():
-	speed = 90 #random.randint(90,250)
-	return (speed)
-
-# Gérer coordonnées initiales fruits
-def coordinate_fruit(screen_size):
-	x = random.randint(0, screen_size[0]-50) 
-	# - la dimension x du fruit car coordonées en haut à gauche 
-	y = -10
-	return((x,y))
-
-# Créer une instance fruit qui hérite de Fruits
-# Ajouter le nouveau sprite au Group de sprite
-def create_fruit(fruits_group):
-	newfruit = Fruits(fruits_group, coordinate_fruit(screen_size),fruit_speed(), (50,50), fruit_color())
-	fruits_group.add(newfruit)
-
+# There was here a lot of functions designed to 
+# instantiate a fruit and add it to a Group of sprites
+# I moved the whole into Fruits.py and deleted the 
+# little ones
 
 # Teste si possible de créer un nv fruit
 def enough_time(passed_time) :
 	if passed_time > 1500 :
+		print("enough", passed_time)
 		return(True)
 	else :
 		return(False)
@@ -85,9 +69,9 @@ def enough_time(passed_time) :
 
 
 # Créer un panier
-panier = Panier(panier_x, panier_y, 500, dimensions)
+panier = Panier(spawn_player_x, spawn_player_y, 500, player_dimensions)
 # On créé notre premier fruit
-create_fruit(fruits_group)
+create_fruit(fruits_group, screen_size[0])
 last_created = 0
 
 while running :
@@ -106,16 +90,12 @@ while running :
 		pressed = pygame.key.get_pressed()
 		# Panier déplaçable que si pas perdu 
 		if lost == False :
-			if pressed[pygame.K_LEFT] : # and not (panier.rect.collidepoint(0,500)):
+			if pressed[pygame.K_LEFT]:
 				panier.direction[0] = -1
-			elif pressed[pygame.K_RIGHT]: # and not (panier.rect.collidepoint(900,500)):
+			elif pressed[pygame.K_RIGHT]:
 				panier.direction[0] = 1
-			#elif panier.rect[0]<=0 :
-			#	panier.direction[0] = 0
-			#	panier.rect[0]=0
 			else:
 				panier.direction[0] = 0
-	#		panier.rect.clamp_ip(screen)
 
 	#		if pressed[pygame.K_UP]:
 	#			panier.direction[1] = -1
@@ -129,17 +109,17 @@ while running :
 
 	panier.move(delta_time)
 
-	mysprites = pygame.sprite.Group.sprites(fruits_group)
+	fruits = pygame.sprite.Group.sprites(fruits_group)
 
 	# On crée le max de sprites autorisé
-	if len(mysprites) < maximum and lost == False and enough_time(last_created) :
-		create_fruit(fruits_group)
+	if len(fruits) < fruits_maximum_count and lost == False and enough_time(last_created) :
+		create_fruit(fruits_group, screen_size[0])
 		last_created = 0
-		mysprites = pygame.sprite.Group.sprites(fruits_group)
+		fruits = pygame.sprite.Group.sprites(fruits_group)
 		
 
-	for i in range (len(mysprites)):
-		spritei = mysprites[i]
+	for i in range (len(fruits)):
+		spritei = fruits[i]
 		move_tom_x, move_tom_y = spritei.rect[0], spritei.rect[1]
 	
 		# On va détecter la collision : si le panier se fait toucher par la tomate
@@ -153,11 +133,12 @@ while running :
 			spritei.remove(fruits_group)
 
 		elif move_tom_y >= screen_size[1] - 51  and fruits_group.has(spritei) :
+			print ("raté")
 			lost = True
 			break
 
 
-	if lost == False :
+	if not lost: # (better readability) 
 		panier.draw(screen)
 		collected_fruits(screen,score)
 		pygame.display.flip()
