@@ -5,17 +5,19 @@ import random, pygame
 from pygame.locals import *
 
 class Fruit(pygame.sprite.Sprite):
-	def __init__(self, fruits_group, coordinate, speed, dimensions, color):
+	current_speed = 120
+	@staticmethod
+	def increase_speed_by(add):
+		Fruit.current_speed += add
+
+	def __init__(self, fruits_group, coordinate, dimensions, color):
 		pygame.sprite.Sprite.__init__(self, [fruits_group])
 		# Fruits are falling vertically
 		self.direction = [0,1]
-		self.speed = speed
 		# x and y (not self.x and self.y) are a temporary copy of self.x and self.y
 		# (because the variable is created inside a function, it will "die" at the end of it)
-		# so they are useless
 
-		self.x = coordinate[0]
-		self.y = coordinate[1]
+		self.x, self.y = coordinate
 
 		if color == 1 :
 			self.surface = pygame.image.load("pred_apple.png")
@@ -33,22 +35,20 @@ class Fruit(pygame.sprite.Sprite):
 		screen.blit(self.surface, self.rect)
 
 	def move(self, delta_time):
-		self.rect.move_ip(self.direction[0] * self.speed*delta_time, self.direction[1] * self.speed*delta_time)
+		self.rect.move_ip(self.direction[0] * Fruit.current_speed * delta_time, self.direction[1] * Fruit.current_speed *delta_time)
 
-# This function is outside of the class fruit
+# This function is outside of the class fruit (we import it)
 # but we could have put it inside (and static) if we want
 
 def create_fruit(fruits_group, screen_width):
 	# We randomly choose a color (or an image) and the coordinates 
 	list_color = [1, (255,0,0), (0,255,0), (0,0,255), (255,255,0), (0,255,255), (255,0,255), (70,70,70), (255,255,255)]
 	color = list_color[random.randint(0, len(list_color)-1)]
-	coords = (random.randint(0, screen_width-50), -10)
-	speed = 90
+	coordinate = (random.randint(0, screen_width-50), -10)
 	dimensions = (50,50)
+	return Fruit(fruits_group, coordinate, dimensions, color)
 
-	return Fruit(fruits_group, coords, speed, dimensions, color)
-
-# Just for demonstration, here what we also could have done :
+# Here, we also could have done :
 # def create_fruit(fruits_group, screen_width):
 # 	all_colors = [1,(255,0,0),(0,255,0), (0,0,255), (255,255,0), (0,255,255), (255,0,255), (70,70,70), (255,255,255)]
 # 	return Fruit(
