@@ -73,7 +73,7 @@ def end_screen(screen, game_played, last_best_score,score, i):
 		# Display 
 		screen.blit(text_gameover,(200,250))
 		screen.blit(text_best_score,(220,350))
-		text_retry = font_bestscore.render("Press P to retry", True, (255,0,10))
+		text_retry = font_bestscore.render("Press R to retry", True, (255,0,10))
 		screen.blit(text_retry, (220,450))
 		pygame.display.flip()
 		i = False
@@ -135,7 +135,7 @@ while running :
 	#			panier.direction[1] = 0
 		if lost :
 			# The player can retry only if he has already lost
-			if pressed[pygame.K_p]:
+			if pressed[pygame.K_r]:
 				lost = False
 				screen.fill((0,0,0))
 				score = 0

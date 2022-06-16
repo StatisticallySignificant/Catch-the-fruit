@@ -5,7 +5,7 @@ import random, pygame
 from pygame.locals import *
 
 class Fruit(pygame.sprite.Sprite):
-	current_speed = 120
+	current_speed = 95
 	@staticmethod
 	def increase_speed_by(add):
 		Fruit.current_speed += add
@@ -22,12 +22,21 @@ class Fruit(pygame.sprite.Sprite):
 		if color == 1 :
 			self.surface = pygame.image.load("pred_apple.png")
 			self.surface = pygame.transform.scale(self.surface, dimensions)
+		elif color == 2 :
+			self.surface = pygame.image.load("pear.png")
+			self.surface = pygame.transform.scale(self.surface, dimensions)
+		elif color == 3 :
+			self.surface = pygame.image.load("orange.png")
+			self.surface = pygame.transform.scale(self.surface, dimensions)
+		elif color == 4:
+			self.surface = pygame.image.load("green_apple.png")
+			self.surface = pygame.transform.scale(self.surface, dimensions)
 		else :
 			self.surface = pygame.Surface(dimensions)
 		# Rect is a rectangular surface with 2 coordinates
 		# It could have 4 : x,y,heigh,width
 		self.rect = self.surface.get_rect(x=self.x,y=self.y)
-		if color != 1:
+		if color != 1 and color != 2 and color != 3 and color !=4 :
 			self.surface.fill(color)
 
 	# Display fruit
@@ -42,8 +51,8 @@ class Fruit(pygame.sprite.Sprite):
 
 def create_fruit(fruits_group, screen_width):
 	# We randomly choose a color (or an image) and the coordinates 
-	list_color = [1, (255,0,0), (0,255,0), (0,0,255), (255,255,0), (0,255,255), (255,0,255), (70,70,70), (255,255,255)]
-	color = list_color[random.randint(0, len(list_color)-1)]
+	list_color = [1, 2, 3, 4, (0,0,255), (255,255,0), (0,255,255), (255,0,255), (90,50,30), (255,255,255)]
+	color = list_color[random.randint(0,len(list_color)-1)]
 	coordinate = (random.randint(0, screen_width-50), -10)
 	dimensions = (50,50)
 	return Fruit(fruits_group, coordinate, dimensions, color)
